@@ -1,8 +1,8 @@
 rm(list = ls())
 source("utils_PH.R")
 # import the utils
-R = 2
-N = 700
+R = 500
+N = 1000
 nCores = 32
 miss = 0.3
 cens = 0.3
