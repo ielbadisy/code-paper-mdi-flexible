@@ -1,7 +1,7 @@
 # Simulation Code for MDI in Flexible Survival Models
 
 
-Code and scripts for the simulation study in the paper **"A comparison of Classical and Machine Learning-Based Missing Data Imputation Methods in Flexible Survival Models with Time-Varying and Non-Linear Covariate Effects"**.
+Code and scripts for the simulation study in the paper **"Classical and machine learning-based imputation of missing covariates in flexible survival models with time-varying and non-linear effects"** (El Badisy and Giorgi).
 
 ## Overview
 
@@ -13,7 +13,7 @@ This repository contains:
 
 ## Publication
 
-This paper is currently under consideration in _Statistics in Medicine_.
+This paper is currently under consideration in _Biometrical Journal_.
 
 ## License
 
