@@ -70,7 +70,7 @@ generate_NA_TVE <- function(dat, mech, pmiss, patterns = c(1, 1, 1, 1, 0, 1)) {
 evaluate_coxest_TVE <- function(impdat) {
   fit <- rstpm2::stpm2(Surv(time, status) ~ x1 + x2 + x3,
                        data = impdat,
-                       tvc = list(x3 = 7))
+                       tvc = list(x3 = 4))
   h0 <- rstpm2::predict(fit, type="haz", newdata=data.frame(x1 = 0, x2 = 0, x3 = 0),  grid=TRUE,
                         full=TRUE, se.fit=TRUE)$Estimate
   time <- rstpm2::predict(fit, type="haz", newdata=data.frame(x1 = 0, x2 = 0, x3 = 0),  grid=TRUE,
@@ -95,7 +95,7 @@ evaluate_coxest_TVE <- function(impdat) {
 obs_hr_x3 <- function(impdat) {
   fit <- rstpm2::stpm2(Surv(time, status) ~ x1 + x2 + x3,
                        data = impdat,
-                       tvc = list(x3 = 7))
+                       tvc = list(x3 = 4))
   
   
   obs_hr_x3 <- rstpm2::predict(fit, type="hr", newdata=data.frame(x1 = 0, x2 = 0, x3 = 0), var = "x3",  grid=TRUE,
