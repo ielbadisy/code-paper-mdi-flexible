@@ -1,0 +1,48 @@
+\begin{table}[H]\centering\small
+\caption{Performance in Scenario 5 averaged over the 25 grid values of $x_2$ (log hazard ratio scale, 500 replicates per mechanism). Mean $|$bias$|$: mean over the grid of the absolute bias. Min coverage: lowest coverage over the grid. MCSE: largest Monte Carlo standard error of coverage over the grid. Failed: replicates in which the method returned no estimate.}\label{tab:c1}
+\begin{tabular}{llrrrrrr}
+\toprule
+Mechanism & Method & Mean $|$bias$|$ & Mean MSE & Mean coverage & Min coverage & MCSE & Failed \\
+\midrule
+MNAR & Full data & 0.013 & 0.021 & 0.935 & 0.922 & 0.012 & 0 \\
+MNAR & Complete cases & 0.011 & 0.037 & 0.937 & 0.916 & 0.012 & 0 \\
+MNAR & Median/mode & 0.188 & 0.080 & 0.790 & 0.516 & 0.022 & 0 \\
+MNAR & Hotdeck & 0.268 & 0.155 & 0.586 & 0.142 & 0.022 & 0 \\
+MNAR & MICE & 0.099 & 0.041 & 0.926 & 0.808 & 0.018 & 0 \\
+MNAR & CART & 0.017 & 0.025 & 0.924 & 0.896 & 0.014 & 0 \\
+MNAR & FAMD & 0.155 & 0.080 & 0.763 & 0.512 & 0.022 & 0 \\
+MNAR & KNN & 0.201 & 0.107 & 0.653 & 0.354 & 0.022 & 0 \\
+MNAR & missCforest & 0.133 & 0.067 & 0.788 & 0.592 & 0.022 & 0 \\
+MNAR & missForest & 0.128 & 0.069 & 0.791 & 0.446 & 0.022 & 0 \\
+MNAR & missRanger & 0.056 & 0.034 & 0.891 & 0.818 & 0.017 & 0 \\
+MNAR & miceCART & 0.018 & 0.025 & 0.935 & 0.908 & 0.013 & 0 \\
+MNAR & miceRF & 0.027 & 0.028 & 0.953 & 0.942 & 0.010 & 0 \\ \midrule
+MAR & Full data & 0.012 & 0.018 & 0.946 & 0.926 & 0.012 & 0 \\
+MAR & Complete cases & 0.101 & 0.044 & 0.901 & 0.820 & 0.017 & 0 \\
+MAR & Median/mode & 0.141 & 0.058 & 0.815 & 0.530 & 0.022 & 0 \\
+MAR & Hotdeck & 0.349 & 0.219 & 0.458 & 0.004 & 0.022 & 0 \\
+MAR & MICE & 0.102 & 0.035 & 0.947 & 0.804 & 0.018 & 0 \\
+MAR & CART & 0.049 & 0.030 & 0.902 & 0.814 & 0.017 & 0 \\
+MAR & FAMD & 0.186 & 0.085 & 0.561 & 0.110 & 0.022 & 0 \\
+MAR & KNN & 0.126 & 0.052 & 0.729 & 0.516 & 0.022 & 0 \\
+MAR & missCforest & 0.060 & 0.034 & 0.842 & 0.674 & 0.021 & 0 \\
+MAR & missForest & 0.076 & 0.034 & 0.852 & 0.722 & 0.020 & 0 \\
+MAR & missRanger & 0.026 & 0.022 & 0.919 & 0.852 & 0.016 & 0 \\
+MAR & miceCART & 0.023 & 0.021 & 0.943 & 0.916 & 0.012 & 0 \\
+MAR & miceRF & 0.061 & 0.026 & 0.950 & 0.896 & 0.014 & 0 \\ \midrule
+MCAR & Full data & 0.015 & 0.019 & 0.946 & 0.922 & 0.012 & 0 \\
+MCAR & Complete cases & 0.014 & 0.028 & 0.946 & 0.928 & 0.012 & 0 \\
+MCAR & Median/mode & 0.085 & 0.035 & 0.886 & 0.660 & 0.021 & 0 \\
+MCAR & Hotdeck & 0.254 & 0.132 & 0.545 & 0.030 & 0.022 & 0 \\
+MCAR & MICE & 0.061 & 0.025 & 0.951 & 0.776 & 0.019 & 0 \\
+MCAR & CART & 0.028 & 0.021 & 0.940 & 0.920 & 0.012 & 0 \\
+MCAR & FAMD & 0.074 & 0.035 & 0.817 & 0.674 & 0.021 & 0 \\
+MCAR & KNN & 0.101 & 0.040 & 0.818 & 0.750 & 0.019 & 0 \\
+MCAR & missCforest & 0.036 & 0.027 & 0.891 & 0.788 & 0.018 & 0 \\
+MCAR & missForest & 0.045 & 0.026 & 0.903 & 0.844 & 0.016 & 0 \\
+MCAR & missRanger & 0.026 & 0.022 & 0.922 & 0.854 & 0.016 & 0 \\
+MCAR & miceCART & 0.014 & 0.020 & 0.949 & 0.932 & 0.011 & 0 \\
+MCAR & miceRF & 0.023 & 0.022 & 0.955 & 0.922 & 0.012 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
