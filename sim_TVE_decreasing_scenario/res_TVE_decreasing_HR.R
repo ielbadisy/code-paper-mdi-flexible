@@ -4,7 +4,7 @@ TVE_3030 <- vroom("res_TVE_decreasing.csv")
 
 TVE_3030 <- TVE_3030 %>% mutate(method = recode(method,
                                                 complete = "CompleteCases",
-                                                naive = "Mean/mode",
+                                                naive = "Median/mode",
                                                 hotdeck = "Hotdeck",
                                                 mice = "MICE",
                                                 cart = "CART",
@@ -16,7 +16,7 @@ TVE_3030 <- TVE_3030 %>% mutate(method = recode(method,
                                                 micecart = "miceCART",
                                                 micerf = "miceRF"))
 
-TVE_3030$method <- factor(TVE_3030$method, levels=c("CompleteCases", "Mean/mode", "Hotdeck", "MICE", "CART", 
+TVE_3030$method <- factor(TVE_3030$method, levels=c("CompleteCases", "Median/mode", "Hotdeck", "MICE", "CART", 
                                                     "FAMD", "KNN", "missCforest",  "missForest", "missRanger",
                                                     "miceCART", "miceRF"))
 ## MCAR -------------------------------------------------------------------
