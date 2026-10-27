@@ -7,7 +7,7 @@ nCores = 32
 miss = 0.3
 cens = 0.3
 mech = c("MCAR", "MAR", "MNAR")
-set.seed = 15102024
+set.seed(15102024)
 
 
 pacman::p_load(dplyr, ggplot2, miceadds, rstpm2, stringr, biostat3, imputer, parallel, gower, fastDummies, mice, survival, mixgb, survAUC, purrr, pbapply, tictoc, missCforest)
