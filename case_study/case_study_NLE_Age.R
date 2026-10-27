@@ -53,7 +53,7 @@ generate_NA_Age <- function(dat, mech = "MNAR", pmiss = 0.3, patterns = c(1, 1, 
 imputation_methods <- c("complete-cases", "naive", "hotdeck", "mice", "cart",
                         "famd", "knn", "misscforest", "missforest", "missranger",
                         "micecart", "micerf")
-method_names <- c("complete-cases" = "CompleteCases", "naive" = "Mean/mode", "hotdeck" = "Hotdeck",
+method_names <- c("complete-cases" = "CompleteCases", "naive" = "Median/mode", "hotdeck" = "Hotdeck",
                   "mice" = "MICE", "cart" = "CART", "famd" = "FAMD", "knn" = "KNN",
                   "misscforest" = "missCforest", "missforest" = "missForest",
                   "missranger" = "missRanger", "micecart" = "miceCART", "micerf" = "miceRF")
