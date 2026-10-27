@@ -50,7 +50,7 @@ for (mk in c("MNAR", "MAR", "MCAR")) {
     geom_line(aes(group = ID), colour = "grey", linewidth = 0.3) +
     geom_line(data = m, aes(y = exp(truth)), colour = "black", linewidth = 0.7) +
     geom_line(data = m, colour = "red", linetype = "dotted", linewidth = 1.2) +
-    facet_wrap(~method, ncol = 4) +
+    facet_wrap(~method, ncol = 4) + coord_cartesian(ylim = c(0, 15)) +
     labs(x = expression(X[2]), y = expression(HR[X[2]] ~ "(reference" ~ X[2] == 1.5 * ")")) + th
   p_cov <- ggplot(pt[mech == mk & method != "FullData"], aes(x2, cover)) +
     geom_hline(yintercept = 0.95, linetype = "dashed") +
