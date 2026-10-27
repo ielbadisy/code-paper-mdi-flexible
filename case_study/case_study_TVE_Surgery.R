@@ -67,7 +67,7 @@ res_Surgery <- map_dfr(imputation_methods, process_imputation_surgery)
 # Standard method names for renaming
 method_names <- c(
   "complete-cases" = "CompleteCases",
-  "naive" = "Mean/mode",
+  "naive" = "Median/mode",
   "hotdeck" = "Hotdeck",
   "mice" = "MICE",
   "cart" = "CART",
@@ -81,7 +81,7 @@ method_names <- c(
 )
 
 # Define the correct facet order
-facet_order <- c("CompleteCases", "Mean/mode", "Hotdeck", "MICE", "CART",
+facet_order <- c("CompleteCases", "Median/mode", "Hotdeck", "MICE", "CART",
                  "FAMD", "KNN", "missCforest", "missForest", "missRanger",
                  "miceCART", "miceRF")
 
