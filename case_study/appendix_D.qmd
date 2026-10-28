@@ -1,0 +1,207 @@
+---
+title: "Case study models"
+subtitle: "Appendix D"
+format:
+  pdf:
+    geometry: margin=2.5cm
+editor: visual
+font-size: 9pt
+toc: true
+echo: false
+---
+
+------------------------------------------------------------------------
+
+## Introduction
+
+This appendix provides detailed specifications and results for the two survival models developed in the colorectal cancer (CRC) case study. These models aim to highlight:
+
+1.  The non-linear effect (NLE) of Age.\
+2.  The time-varying effect (TVE) of Surgery.
+
+All analyses were performed using the `rstpm2` package for flexible survival models. The dataset was cleaned and preprocessed to include only the covariates relevant to our case study.
+
+```{r, message=FALSE, warning=FALSE}
+# Data preparation (complete records of the analysis variables, see R/utils_case_study.R)
+suppressMessages({
+  library(tidyverse); library(rstpm2); library(broom); library(survival)
+  library(survminer); library(purrr)
+})
+source("../R/utils_case_study.R")
+
+set.seed(1234)
+
+CRC <- read_CRC("../data/CRC.csv")
+```
+
+------------------------------------------------------------------------
+
+## Proportional Hazards assumption and functional form diagnostics
+
+Before fitting flexible survival models, we assessed the proportional hazards (PH) assumption and the functional form of covariates.
+
+### Schoenfeld residual tests
+
+```{r, echo = FALSE}
+# Cox model for PH testing
+cox_model <- coxph(Surv(time, event) ~ Age + Surgery +
+                     MSI.MSS.status + Sex + Stage, data = CRC)
+ph_test <- cox.zph(cox_model)
+print(ph_test)
+```
+
+Significant p-values for Age and Surgery indicate violations of the proportional hazards assumption.
+
+### Schoenfeld residual plots
+
+```{r, echo = FALSE, fig.cap="Schoenfeld residuals for Age"}
+ggcoxzph(ph_test, var = "Age")
+```
+
+```{r, echo = FALSE, fig.cap="Schoenfeld residuals for Surgery"}
+ggcoxzph(ph_test, var = "Surgery")
+```
+
+------------------------------------------------------------------------
+
+### Martingale residuals for age
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE, fig.cap="Martingale residuals for Age"}
+CRC$martingale <- residuals(cox_model, type = "martingale")
+
+ggplot(CRC, aes(Age, martingale)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE, color = "blue") +
+  labs(
+    title = "Martingale Residuals vs Age",
+    x = "Age",
+    y = "Martingale Residuals"
+  ) +
+  theme_minimal()
+```
+
+The plot reveals a convex, non-linear pattern for Age, with relatively stable risk in midlife and increasing hazard at older ages, supporting the use of a flexible modeling approach.
+
+------------------------------------------------------------------------
+
+## Degrees of Freedom (df) selection
+
+To select the optimal spline complexity, AIC was computed across multiple degrees of freedom.
+
+### For age
+
+```{r, echo=FALSE}
+rng_age <- range(CRC$Age)
+aic_stpm2 <- function(model) 2 * model@min + 2 * length(coef(model))
+fit_lin <- stpm2(Surv(time, event) ~ Age + Surgery + MSI.MSS.status + Sex + Stage,
+                 data = CRC)
+dfs_age <- 1:6
+aic_results_age <- map_dfr(dfs_age, function(df) {
+  fit_df <- stpm2(Surv(time, event) ~ nsx(Age, df = df, Boundary.knots = rng_age) +
+                    Surgery + MSI.MSS.status + Sex + Stage,
+                  data = CRC)
+  tibble(model = paste0("natural spline, df = ", df), AIC = aic_stpm2(fit_df))
+})
+aic_results_age <- bind_rows(tibble(model = "linear", AIC = aic_stpm2(fit_lin)),
+                             aic_results_age)
+as.data.frame(mutate(aic_results_age, AIC = round(AIC, 1)))
+```
+
+The NLE of Age is modeled with a natural cubic spline of Age in the linear predictor. The AIC values were close across specifications (linear age and spline df from 1 to 6), so the data give weak support for departure from linearity. We retained df = 4, which allows a U-shaped or asymmetric pattern without the instability of higher df.
+
+### For surgery
+
+```{r}
+dfs_surgery <- 2:4
+aic_results_surgery <- map_dfr(dfs_surgery, function(df) {
+  model <- stpm2(Surv(time, event) ~ Age + Surgery + MSI.MSS.status + Sex + Stage,
+                 data = CRC,
+                 tvc = list(Surgery = df))
+  tibble(df = df, AIC = AIC(model))
+})
+aic_results_surgery
+```
+
+Although the model with df = 4 yielded the lowest AIC for Surgery, the resulting time-varying hazard curve exhibited implausible fluctuations and lacked clinical interpretability. For this reason, a more parsimonious model with df = 3 was retained, as it provided a smoother and more consistent representation of the time-varying effect, better aligned with clinical plausibility and visual diagnostics.
+
+------------------------------------------------------------------------
+
+## Model 1: Non-Linear Effect (NLE) of age
+
+A flexible survival model capturing the non-linear effect of Age with a natural cubic spline of Age with 4 degrees of freedom:
+
+```{r}
+fit_Age <- stpm2(
+  Surv(time, event) ~ nsx(Age, df = 4, Boundary.knots = rng_age) +
+    Surgery + MSI.MSS.status + Sex + Stage,
+  data = CRC
+)
+summary(fit_Age)
+```
+
+```{r, warning=FALSE, fig.cap="Non-linear effect of Age: hazard ratio relative to age 60 years (log scale)"}
+age_grid <- seq(25, 85, by = 1)
+age_grid <- age_grid[age_grid >= rng_age[1] & age_grid <= rng_age[2]]
+nd_age <- data.frame(time = 12, Age = age_grid, Surgery = 0,
+                     MSI.MSS.status = 0, Sex = 0, Stage = 1)
+ref_age <- transform(nd_age, Age = 60)
+hr_age <- data.frame(
+  Age = age_grid,
+  HR = predict(fit_Age, newdata = nd_age, type = "haz") /
+    predict(fit_Age, newdata = ref_age, type = "haz")
+)
+ggplot(hr_age, aes(Age, HR)) +
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  scale_y_log10() +
+  labs(x = "Age (years)", y = "HR (Age vs 60)") +
+  theme_minimal()
+```
+
+------------------------------------------------------------------------
+
+## Model 2: Time-Varying Effect (TVE) of surgery
+
+A flexible survival model capturing the time-varying effect of Surgery using 3 degrees of freedom:
+
+```{r}
+fit_Surgery <- stpm2(
+  Surv(time, event) ~ Age + Surgery + 
+    MSI.MSS.status + Sex + Stage,
+  data = CRC,
+  tvc = list(Surgery = 3)
+)
+summary(fit_Surgery)
+```
+
+```{r, eval=FALSE, fig.cap="Time-varying Hazard Ratio for Surgery"}
+### Plot of hazard ratio of surgery over time
+
+n <- nrow(CRC) + 1
+surgery_pred <- predict(fit_Surgery, type = "link",
+                        newdata = data.frame(Age = 60, Surgery = 1, MSI.MSS.status = 0, Sex = 0, Stage = 1),
+                        grid = TRUE, seqLength = n, full = TRUE, se.fit = TRUE)
+
+surgery_pred <- surgery_pred %>%
+  mutate(
+    HR = exp(Estimate),
+    HR_lower = exp(lower),
+    HR_upper = exp(upper)
+  )
+
+ggplot(surgery_pred, aes(x = time, y = HR)) +
+  geom_line(color = "blue") +
+  geom_ribbon(aes(ymin = HR_lower, ymax = HR_upper), alpha = 0.2) +
+  labs(
+    title = "Time-varying Hazard Ratio for Surgery",
+    x = "Time (years)",
+    y = "Hazard Ratio (Surgery)"
+  ) +
+  theme_minimal()
+```
+
+------------------------------------------------------------------------
+
+## Conclusion
+
+This appendix presents diagnostic checks and detailed flexible modeling strategies used to examine non-linear and time-varying effects in the CRC survival analysis case study. The findings support the application of spline-based models to uncover complex covariate behavior over time and across distributions.
