@@ -1,9 +1,10 @@
 #====================[ SETUP ]====================
 # Scenario 5 (non-linear effect of x2). Runs all methods on the same amputed
-# dataset within each replicate and saves per-replicate curves to res_NLE.rds.
+# dataset within each replicate and saves per-replicate curves to
+# results/sim/res_NLE.rds. Run from the repository root: Rscript sim/sim_NLE.R
 # Requires mcstatsim >= 0.9 (remotes::install_github("ielbadisy/mcstatsim")).
-rm(list = ls())
-source("utils_NLE.R")
+source("R/labels.R")
+source("R/utils_NLE.R")
 library(mcstatsim)
 
 #====================[ PARAMETERS ]====================
@@ -14,7 +15,6 @@ nCores <- 12
 
 METHODS <- c("complete_data", "complete", "naive", "hotdeck", "knn", "cart", "famd",
              "missforest", "missranger", "misscforest", "mice", "micecart", "micerf")
-MULTI   <- c("mice", "micecart", "micerf")
 
 #====================[ ONE REPLICATE ]====================
 simcox_NLE <- function(mech) {
@@ -24,7 +24,7 @@ simcox_NLE <- function(mech) {
     res <- tryCatch({
       if (method == "complete_data") {
         ci_single(fit_NLE(dat))
-      } else if (method %in% MULTI) {
+      } else if (method %in% MULTI_METHODS) {
         imp <- suppressWarnings(imputer::imputer(ampdat, method = method))
         ci_rubin(lapply(mice::complete(imp, "all"), fit_NLE))
       } else {
@@ -44,6 +44,7 @@ simcox_NLE <- function(mech) {
 grid_NLE <- data.frame(mech = c("MNAR", "MAR", "MCAR"))
 res_NLE  <- runsim(R, grid_NLE, simcox_NLE, num_cores = nCores, seed = 15102024,
                    show_progress = FALSE, on_error = "warn",
-                   save_path = "res_NLE_checkpoint.rds", checkpoint_every = 50L)
+                   save_path = results_path("sim", "res_NLE_checkpoint.rds"),
+                   checkpoint_every = 50L)
 print(failure_summary(res_NLE))
-saveRDS(res_NLE, "res_NLE.rds")
+saveRDS(res_NLE, results_path("sim", "res_NLE.rds"))
