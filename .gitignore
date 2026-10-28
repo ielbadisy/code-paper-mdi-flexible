@@ -2,8 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-sim_NLE_scenario/sim_NLE.log
-sim_NLE_scenario/sim_NLE.pid
-sim_NLE_scenario/res_NLE_checkpoint.rds
-sim_NLE_scenario/res_NLE.out
-sim_NLE_scenario/figures/
+results/
+case_study/appendix_D.pdf
+case_study/appendix_D_files/
