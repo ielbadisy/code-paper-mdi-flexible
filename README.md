@@ -1,69 +1,90 @@
-# Simulation code for missing data imputation in flexible survival models
+# Code for "Classical and machine learning-based imputation of missing covariates in flexible survival models with time-varying and non-linear effects"
 
-Code and scripts for the simulation study and the application in the paper
-**"Classical and machine learning-based imputation of missing covariates in
-flexible survival models with time-varying and non-linear effects"**
-(El Badisy and Giorgi, under consideration in _Biometrical Journal_).
+Imad El Badisy and Roch Giorgi (submitted to _Biometrical Journal_).
 
-## Contents
+This repository contains the code that reproduces the simulation study
+(Scenarios 1-5) and the application to a colorectal cancer cohort. All
+scripts are run from the repository root.
 
-| Folder | Content | Paper output |
-|---|---|---|
-| `sim_PH_scenario/` | Scenario 1 (proportional hazards) | Section 4.1, Appendix A |
-| `sim_TVE_bathub_scenario/` | Scenario 2 (bathtub TVE of x3) | Section 4.2, Appendix B |
-| `sim_TVE_decreasing_scenario/` | Scenario 3 (decreasing TVE of x3) | Section 4.2, Appendix B |
-| `sim_TVE_increasing_scenario/` | Scenario 4 (increasing TVE of x3) | Figures 1-3, Appendix B |
-| `sim_NLE_scenario/` | Scenario 5 (non-linear effect of x2) | Figures 4-6, Appendix C |
-| `case_study/` | Colorectal cancer application | Figures 7-8, Appendix D |
+## Structure
 
-Each simulation folder contains:
+| File | Content |
+|---|---|
+| `R/labels.R` | Method codes, paper labels, output helpers |
+| `R/utils_PH.R` | Scenario 1: data generation, amputation, Cox model, Rubin's rules |
+| `R/utils_TVE.R` | Scenarios 2-4: data generation, amputation, `rstpm2::stpm2` with a time-varying effect of x3, Rubin's rules |
+| `R/utils_NLE.R` | Scenario 5: data generation, amputation, `rstpm2::stpm2` with a natural spline of x2, Rubin's rules |
+| `R/utils_case_study.R` | Application: data preparation, amputation, imputation |
+| `sim/sim_PH.R` | Runs Scenario 1 (500 replicates per mechanism) |
+| `sim/sim_TVE.R` | Runs Scenarios 2-4, one TVE shape per call (`bathub`, `decreasing`, `increasing`) |
+| `sim/sim_NLE.R` | Runs Scenario 5 (500 replicates per mechanism) |
+| `analysis/res_PH.R` | Tables 2-3, Appendix A tables and figures |
+| `analysis/res_TVE.R` | Figures 1-3, Appendix B figures |
+| `analysis/res_NLE.R` | Figures 4-6, Table C1 and figures of Appendix C |
+| `case_study/case_study_age.R` | Figure 7 (non-linear effect of age) |
+| `case_study/case_study_surgery.R` | Figure 8 (time-varying effect of surgery) |
+| `case_study/appendix_D.qmd` | Appendix D (diagnostics and model selection of the application) |
+| `data/CRC.csv` | Colorectal cancer cohort used in the application |
+| `run_all.R` | Runs all of the above |
 
-- `utils_*.R`: data generation, amputation (MCAR, MAR, MNAR), imputation
-  methods, and estimation of the flexible parametric survival model
-  (`rstpm2::stpm2`).
-- `sim_*.R`: runs the scenario (R = 500 replicates, N = 1000 observations per
-  replicate) and writes `res_*.csv`.
-- `res_*.R` / `results_PH.R`: read `res_*.csv` and produce the figures of
-  hazard ratios, empirical coverage, and MSE.
-
-`sim_NLE_scenario/` is organized differently: `utils_NLE.R` holds the data
-generation (true log hazard ratio `g(x2) = 0.6 log(1 + (x2 - 1.5)^2)`, constant
-over time), amputation of x2, the flexible parametric model with a natural
-spline of x2 (7 df, knots fixed from the population distribution of x2), and
-Rubin's rules on the log hazard ratio scale. `sim_NLE.R` runs all methods on
-the same amputed dataset in each replicate (500 replicates per mechanism)
-with `mcstatsim::runsim()` and saves `res_NLE.rds`. `res_NLE.R` computes bias,
-MSE, coverage of the true curve, and Monte Carlo standard errors
-(`performance_NLE.csv`, `performance_NLE_by_x2.csv`, `table_C1.tex`) and produces
-the figures. `res_NLE.rds` (per-replicate estimates) is included, so the
-figures and tables can be reproduced without rerunning the simulation.
-
-The application uses `case_study/CRC.csv` (343 patients), a previously
-published dataset openly available on Figshare:
-<https://figshare.com/articles/dataset/dataset_CRC_Fes_csv/21821439?file=38720988>.
-`case_study_NLE_Age.R` prints the AIC of the age models (linear, natural
-spline df 1 to 6) and produces Figure 7, `case_study_TVE_Surgery.R` produces
-Figure 8, and `case_study_Models.R` fits the models on the full dataset.
-
-## Installation
-
-All dependencies are on CRAN except `imputer`, the wrapper used to call the
-imputation methods, which is installed from GitHub:
-
-```r
-install.packages(c("pacman", "tidyverse", "vroom", "data.table", "rstpm2",
-  "survival", "survAUC", "biostat3", "mice", "miceadds", "mixgb",
-  "missCforest", "gower", "fastDummies", "purrr", "pbapply", "tictoc"))
-remotes::install_github("ielbadisy/imputer")
-remotes::install_github("ielbadisy/mcstatsim")  # Scenario 5 (needs version >= 0.9)
-```
+All outputs are written to `results/` (`sim/`, `tables/`, `figures/`), which
+is created by the scripts and not tracked in the repository.
 
 ## Running
 
-Open a scenario folder as the working directory (each has its own `.Rproj`)
-and run `sim_*.R`, then the `res_*.R` scripts. The simulation scripts run the
-replicates in parallel through `pbapply` with `nCores` cores (set at the top of
-each script; adjust to your machine). Random seeds are fixed in each script.
+```sh
+Rscript run_all.R --sim   # simulations, then all tables and figures
+Rscript run_all.R         # tables and figures only, from results/sim/*.rds
+```
+
+Each simulation can also be run on its own, for example
+`Rscript sim/sim_TVE.R increasing`. Approximate run times on a 16-core
+machine: Scenario 1 about 1 hour, each TVE shape about 4 hours (serial),
+Scenario 5 about 15 minutes. The analysis and application scripts take
+less than 2 minutes each.
+
+## Reproducibility
+
+- Seeds are fixed in every script (`15102024` for the simulations, `1234`
+  for the application).
+- Scenarios 1 and 5 are run with `mcstatsim::runsim()`, which gives each job
+  its own L'Ecuyer-CMRG random-number stream, so results do not depend on the
+  number of cores.
+- Scenarios 2-4 are run as a serial loop over replicates from a single seed,
+  because the random-number stream is shared by all methods within a
+  replicate.
+- In Scenarios 1 and 5 and in the application, missing values are introduced
+  once per replicate and mechanism, and every imputation method is applied to
+  the same amputed dataset. In Scenarios 2-4, missing values are introduced
+  again for each method, in a fixed order, from the same complete dataset.
+- Estimates from the stochastic imputation methods (hotdeck, CART, FAMD,
+  missForest, missRanger, missCforest, MICE, miceCART, miceRF) depend on the
+  versions of the imputation packages. The versions used are listed below.
+
+## Software
+
+R 4.5.1 with: rstpm2 1.6.9, survival 3.8.6, mice 3.19.0, miceadds 3.17.44,
+missForest 1.5, missRanger 2.6.1, missCforest 0.0.8, missMDA 1.22,
+FactoMineR 2.16, VIM 6.2.2, simputation 0.2.9, mixgb 2.2.3,
+randomForest 4.7.1.2, ranger 0.18.0, rpart 4.1.24, data.table 1.18.4,
+ggplot2 4.0.3, mcstatsim 0.9.2, and imputer (GitHub commit `553332a`).
+Appendix D also uses tidyverse 2.0.0, broom 1.0.13, and survminer 0.5.2.
+
+```r
+install.packages(c("rstpm2", "survival", "mice", "miceadds", "missForest",
+  "missRanger", "missCforest", "missMDA", "FactoMineR", "VIM", "simputation",
+  "mixgb", "randomForest", "ranger", "rpart", "data.table", "ggplot2",
+  "tidyverse", "broom", "survminer", "remotes"))
+remotes::install_github("ielbadisy/imputer@553332ad8334693eceb248655dde92687c4cbe8c")
+remotes::install_github("ielbadisy/mcstatsim@v0.9.2")
+```
+
+## Data
+
+`data/CRC.csv` is a previously published, anonymized cohort of 343 patients
+with colorectal cancer, openly available on Figshare:
+<https://figshare.com/articles/dataset/dataset_CRC_Fes_csv/21821439?file=38720988>.
+The simulated data are generated by the scripts.
 
 ## License
 
