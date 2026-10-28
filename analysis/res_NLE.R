@@ -1,16 +1,14 @@
 #====================[ SCENARIO 5: RESULTS ]====================
-# Reads res_NLE.rds (from sim_NLE.R) and produces the effect, coverage, and MSE
-# figures for each missingness mechanism, plus a performance table with Monte
-# Carlo standard errors. Estimand: log HR g(x2) - g(1.5) on the x2 grid.
+# Reads results/sim/res_NLE.rds (from sim/sim_NLE.R) and produces the effect,
+# coverage, and MSE figures for each missingness mechanism (Figures 4-6 for MNAR,
+# Appendix C for MAR and MCAR), plus Table C1 with Monte Carlo standard errors.
+# Estimand: log HR g(x2) - g(1.5) on the x2 grid.
+# Run from the repository root: Rscript analysis/res_NLE.R
 suppressPackageStartupMessages({ library(ggplot2); library(data.table) })
+source("R/labels.R")
 
-res <- as.data.table(readRDS("res_NLE.rds"))
-dir.create("figures", showWarnings = FALSE)
-
-LAB <- c(complete_data = "FullData", complete = "CompleteCases", naive = "Median/mode",
-         hotdeck = "Hotdeck", mice = "MICE", cart = "CART", famd = "FAMD", knn = "KNN",
-         misscforest = "missCforest", missforest = "missForest", missranger = "missRanger",
-         micecart = "miceCART", micerf = "miceRF")
+res <- as.data.table(readRDS(results_path("sim", "res_NLE.rds")))
+LAB <- METHOD_LABELS
 
 #---------- failures (fits that returned NA) ----------
 fail <- res[, .(failed_reps = uniqueN(ID[is.na(est)])), by = .(mech, method)]
@@ -32,8 +30,8 @@ perf <- pt[, .(R = min(R), mean_abs_bias = mean(abs(bias)), max_abs_bias = max(a
 perf <- merge(perf, fail[, .(mech, method = factor(LAB[method], levels = LAB), failed_reps)],
               by = c("mech", "method"))
 setorder(perf, mech, method)
-fwrite(perf, "performance_NLE.csv")
-fwrite(pt, "performance_NLE_by_x2.csv")
+fwrite(perf, results_path("tables", "performance_NLE.csv"))
+fwrite(pt, results_path("tables", "performance_NLE_by_x2.csv"))
 pm <- res[, .(prop_missing = mean(prop_missing)), by = mech]
 print(pm)
 print(perf[, .(mech, method, R, failed_reps, bias = round(mean_abs_bias, 3),
@@ -63,22 +61,36 @@ for (mk in c("MNAR", "MAR", "MCAR")) {
     geom_boxplot(fill = "lightblue", outlier.colour = "red", outlier.size = 0.5) +
     facet_wrap(~method, ncol = 4) +
     labs(x = expression(X[2] ~ "(rounded)"), y = expression("MSE of" ~ log ~ HR[X[2]])) + th
-  for (p in list(list("effect", p_eff), list("coverage", p_cov), list("mse", p_mse)))
-    ggsave(sprintf("figures/NLE_%s_%s.png", p[[1]], mk), p[[2]], width = 12, height = 9, dpi = 200)
+  # MNAR: Figures 4-6 of the paper; MAR and MCAR: Appendix C
+  out <- if (mk == "MNAR") {
+    sprintf("Figure%d_NLE_%s_MNAR.png", 4:6, c("effect", "coverage", "mse"))
+  } else {
+    file.path("appendix_C", sprintf("NLE_%s_%s.png", c("effect", "coverage", "mse"), mk))
+  }
+  dir.create(file.path("results", "figures", "appendix_C"), recursive = TRUE, showWarnings = FALSE)
+  for (i in 1:3) save_figure(list(p_eff, p_cov, p_mse)[[i]], out[i], width = 12, height = 9)
 }
 
 #---------- LaTeX table for Appendix C ----------
 f3 <- function(x) formatC(x, format = "f", digits = 3)
 tb <- perf[order(match(mech, c("MNAR", "MAR", "MCAR")), method)]
 rows <- tb[, sprintf("%s & %s & %s & %s & %s & %s & %s & %d \\\\",
-                     mech, sub("CompleteCases", "Complete cases", sub("FullData", "Full data", method)), f3(mean_abs_bias), f3(mean_mse),
+                     mech,
+                     sub("CompleteCases", "Complete cases", sub("FullData", "Full data", method)),
+                     f3(mean_abs_bias), f3(mean_mse),
                      f3(mean_cover), f3(min_cover), f3(max_mcse_cover), failed_reps)]
 mid <- which(diff(match(tb$mech, c("MNAR", "MAR", "MCAR"))) != 0)
 rows[mid] <- paste(rows[mid], "\\midrule")
 writeLines(c(
   "\\begin{table}[H]\\centering\\small",
-  "\\caption{Performance in Scenario 5 averaged over the 25 grid values of $x_2$ (log hazard ratio scale, 500 replicates per mechanism). Mean $|$bias$|$: mean over the grid of the absolute bias. Min coverage: lowest coverage over the grid. MCSE: largest Monte Carlo standard error of coverage over the grid. Failed: replicates in which the method returned no estimate.}\\label{tab:c1}",
+  paste("\\caption{Performance in Scenario 5 averaged over the 25 grid values of $x_2$",
+        "(log hazard ratio scale, 500 replicates per mechanism).",
+        "Mean $|$bias$|$: mean over the grid of the absolute bias.",
+        "Min coverage: lowest coverage over the grid.",
+        "MCSE: largest Monte Carlo standard error of coverage over the grid.",
+        "Failed: replicates in which the method returned no estimate.}\\label{tab:c1}"),
   "\\begin{tabular}{llrrrrrr}", "\\toprule",
-  "Mechanism & Method & Mean $|$bias$|$ & Mean MSE & Mean coverage & Min coverage & MCSE & Failed \\\\",
+  paste("Mechanism & Method & Mean $|$bias$|$ & Mean MSE & Mean coverage & Min coverage",
+        "& MCSE & Failed \\\\"),
   "\\midrule", rows, "\\bottomrule", "\\end{tabular}", "\\end{table}"),
-  "table_C1.tex")
+  results_path("tables", "table_C1.tex"))
