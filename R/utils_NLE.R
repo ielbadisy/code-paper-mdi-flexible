@@ -13,7 +13,8 @@ suppressPackageStartupMessages({
 })
 
 LAMBDA   <- 0.2    # baseline hazard
-LAMBDA_C <- 0.058  # censoring hazard, gives about 30% censored (incl. administrative censoring at MAXT)
+# censoring hazard: about 30% censored, including administrative censoring at MAXT
+LAMBDA_C <- 0.058
 MAXT     <- 5      # administrative censoring (years)
 
 g_x2  <- function(x) 0.6 * log(1 + (x - 1.5)^2)   # true log hazard ratio, minimum at x2 = 1.5
