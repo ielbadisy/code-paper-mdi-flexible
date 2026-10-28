@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2025 sim_NLE_scenario authors
+Copyright (c) 2026 Imad El Badisy and Roch Giorgi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
